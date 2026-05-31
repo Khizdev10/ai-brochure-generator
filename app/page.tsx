@@ -1,9 +1,12 @@
 // import Image from "next/image";
+import Navbar from '@/components/Navbar'
+import Intro from '@/components/Intro'
 
 export default function Home() {
   return (
-    <div>
-      <h1>Hello world </h1>
+    <div className="bg-sky-50 text-black min-h-screen">
+      <Navbar />
+      <Intro />
     </div>
   );
 }
