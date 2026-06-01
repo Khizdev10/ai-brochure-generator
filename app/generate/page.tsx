@@ -2,34 +2,35 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { scrapeFullWebsite, scrapeWebsite } from '../src/lib/scraper';
 
 const styleOptions = [
     {
         id: 'business',
         title: 'Business',
         subtitle: 'Clean & Professional',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" /><path d="M12 10h.01" /><path d="M12 14h.01" /><path d="M16 10h.01" /><path d="M16 14h.01" /><path d="M8 10h.01" /><path d="M8 14h.01" /></svg>,
         imgClass: "bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
     },
     {
         id: 'enterprise',
         title: 'Enterprise',
         subtitle: 'Data-driven & Robust',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>,
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>,
         imgClass: "bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
     },
     {
         id: 'creative',
         title: 'Creative',
         subtitle: 'Bold & Modern',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>,
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg>,
         imgClass: "bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
     },
     {
         id: 'minimal',
         title: 'Minimal',
         subtitle: 'Sleek & Simple',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
         imgClass: "bg-[url('https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
     }
 ];
@@ -125,14 +126,13 @@ export default function GeneratePage() {
 
                         {/* Actions */}
                         <div className="pt-4 space-y-4">
-                            <button 
+                            <button
                                 disabled={!sourceLink.trim()}
                                 onClick={() => setStep(2)}
-                                className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-lg font-semibold transition-colors shadow-sm ${
-                                    sourceLink.trim() 
-                                        ? "bg-[#5542f6] hover:bg-indigo-700 text-white cursor-pointer" 
-                                        : "bg-[#c4bdfb] text-white cursor-not-allowed"
-                                }`}
+                                className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-lg font-semibold transition-colors shadow-sm ${sourceLink.trim()
+                                    ? "bg-[#5542f6] hover:bg-indigo-700 text-white cursor-pointer"
+                                    : "bg-[#c4bdfb] text-white cursor-not-allowed"
+                                    }`}
                             >
                                 Continue
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -173,20 +173,18 @@ export default function GeneratePage() {
                     {/* Style Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {styleOptions.map((style) => (
-                            <div 
+                            <div
                                 key={style.id}
                                 onClick={() => setSelectedStyle(style.id)}
-                                className={`cursor-pointer rounded-xl border p-3 transition-all ${
-                                    selectedStyle === style.id 
-                                        ? "border-[#5542f6] shadow-md ring-1 ring-[#5542f6] bg-white transform -translate-y-1" 
-                                        : "border-slate-200 bg-white hover:border-slate-300 shadow-sm hover:shadow-md hover:-translate-y-1"
-                                }`}
+                                className={`cursor-pointer rounded-xl border p-3 transition-all ${selectedStyle === style.id
+                                    ? "border-[#5542f6] shadow-md ring-1 ring-[#5542f6] bg-white transform -translate-y-1"
+                                    : "border-slate-200 bg-white hover:border-slate-300 shadow-sm hover:shadow-md hover:-translate-y-1"
+                                    }`}
                             >
                                 <div className={`w-full h-36 rounded-lg mb-4 ${style.imgClass}`}></div>
                                 <div className="flex flex-col items-center text-center pb-2">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                                        selectedStyle === style.id ? "bg-[#5542f6] text-white" : "bg-[#f8faff] text-[#5542f6]"
-                                    }`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${selectedStyle === style.id ? "bg-[#5542f6] text-white" : "bg-[#f8faff] text-[#5542f6]"
+                                        }`}>
                                         {style.icon}
                                     </div>
                                     <h3 className="font-bold text-slate-800">{style.title}</h3>
@@ -198,14 +196,17 @@ export default function GeneratePage() {
 
                     {/* Actions */}
                     <div className="mt-12 flex flex-col items-center">
-                        <button 
-                            onClick={() => setStep(3)}
+                        <button
+                            onClick={async () => {
+                                let data = await scrapeFullWebsite(sourceLink);
+                                console.log(data);
+                                setStep(3)
+                            }}
                             disabled={!selectedStyle}
-                            className={`w-full max-w-xs flex justify-center items-center py-3.5 rounded-lg font-semibold transition-colors shadow-sm ${
-                                selectedStyle 
-                                    ? "bg-[#5542f6] hover:bg-indigo-700 text-white cursor-pointer" 
-                                    : "bg-[#c4bdfb] text-white cursor-not-allowed"
-                            }`}
+                            className={`w-full max-w-xs flex justify-center items-center py-3.5 rounded-lg font-semibold transition-colors shadow-sm ${selectedStyle
+                                ? "bg-[#5542f6] hover:bg-indigo-700 text-white cursor-pointer"
+                                : "bg-[#c4bdfb] text-white cursor-not-allowed"
+                                }`}
                         >
                             Generate Brochure
                         </button>
@@ -252,7 +253,7 @@ export default function GeneratePage() {
 
                         {/* Right Side: Markdown & Actions */}
                         <div className="w-full lg:w-1/2 flex flex-col gap-6">
-                            
+
                             {/* Markdown Viewer */}
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex-1 flex flex-col">
                                 <div className="flex items-center justify-between mb-4">
@@ -263,15 +264,15 @@ export default function GeneratePage() {
                                     </button>
                                 </div>
                                 <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 font-mono text-sm text-slate-600 flex-1 overflow-y-auto max-h-[300px]">
-                                    <span className="text-[#5542f6]">#</span> Company Overview<br/><br/>
-                                    Welcome to our innovative platform. We provide cutting-edge solutions for modern businesses looking to scale efficiently.<br/><br/>
-                                    <span className="text-[#5542f6]">##</span> Core Services<br/><br/>
-                                    - <span className="font-semibold">AI Integration:</span> Seamlessly add intelligence to your workflow.<br/>
-                                    - <span className="font-semibold">Data Analytics:</span> Understand your metrics instantly.<br/>
-                                    - <span className="font-semibold">Cloud Sync:</span> Always connected, everywhere.<br/><br/>
-                                    <span className="text-[#5542f6]">##</span> Contact Us<br/><br/>
-                                    hello@yourcompany.com<br/>
-                                    +1 (555) 123-4567<br/>
+                                    <span className="text-[#5542f6]">#</span> Company Overview<br /><br />
+                                    Welcome to our innovative platform. We provide cutting-edge solutions for modern businesses looking to scale efficiently.<br /><br />
+                                    <span className="text-[#5542f6]">##</span> Core Services<br /><br />
+                                    - <span className="font-semibold">AI Integration:</span> Seamlessly add intelligence to your workflow.<br />
+                                    - <span className="font-semibold">Data Analytics:</span> Understand your metrics instantly.<br />
+                                    - <span className="font-semibold">Cloud Sync:</span> Always connected, everywhere.<br /><br />
+                                    <span className="text-[#5542f6]">##</span> Contact Us<br /><br />
+                                    hello@yourcompany.com<br />
+                                    +1 (555) 123-4567<br />
                                     {sourceLink || "www.yourcompany.com"}
                                 </div>
                             </div>
@@ -280,24 +281,24 @@ export default function GeneratePage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <button className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group">
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">Download PDF</span>
                                 </button>
-                                
+
                                 <button className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group">
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">Share Link</span>
                                 </button>
 
-                                <button 
+                                <button
                                     onClick={() => { setStep(1); setSourceLink(""); setSelectedStyle(null); }}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group col-span-2"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#5542f6]"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#5542f6]"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
                                         <span className="font-semibold text-slate-800">Generate Another</span>
                                     </div>
                                 </button>
