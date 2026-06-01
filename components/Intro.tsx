@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import mainImg from '../assets/main.png';
+import Link from 'next/link';
+
 
 const Intro = () => {
     return (
@@ -7,7 +9,7 @@ const Intro = () => {
 
             {/* Left Column - Text Content */}
             <div className="w-full lg:w-[55%] flex flex-col justify-center items-start space-y-8">
-                
+
                 {/* Badge */}
                 <div className="flex items-center gap-2 text-sm font-semibold text-indigo-600 px-4 py-2 bg-indigo-100/50 rounded-full border border-indigo-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,13 +34,13 @@ const Intro = () => {
 
                 {/* Buttons */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 w-full sm:w-auto">
-                    <button className="w-full sm:w-auto flex justify-center items-center gap-2 bg-[#5542f6] hover:bg-indigo-700 text-white px-8 py-3.5 rounded-lg font-medium transition-all shadow-md">
+                    <Link href='/generate' className="w-full sm:w-auto flex justify-center items-center gap-2 bg-[#5542f6] hover:bg-indigo-700 text-white px-8 py-3.5 rounded-lg font-medium transition-all shadow-md">
                         Get Started Free
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </button>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                    </Link>
                     <button className="w-full sm:w-auto flex justify-center items-center gap-2 bg-white hover:bg-gray-50 text-slate-800 border border-gray-300 px-8 py-3.5 rounded-lg font-medium transition-all shadow-sm">
                         Watch Demo
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" /></svg>
                     </button>
                 </div>
 
@@ -46,9 +48,9 @@ const Intro = () => {
 
             {/* Right Column - Image */}
             <div className="w-full lg:w-[45%] flex justify-end items-center relative">
-                <Image 
-                    src={mainImg} 
-                    alt="AI Brochure Mockup" 
+                <Image
+                    src={mainImg}
+                    alt="AI Brochure Mockup"
                     className="w-full max-w-[800px] h-auto object-contain transition-transform duration-700 hover:scale-[1.02] lg:translate-x-8"
                     priority
                 />
