@@ -7,8 +7,8 @@ const Navbar = () => {
     return (
         <div className="bg-sky-50 py-4 px-8 md:px-16 border-b border-gray-200 relative z-50">
             <div className="flex justify-between items-center">
-                <h1 className="text-blue-600 font-bold text-2xl">brochure.ai</h1>
-                
+                <h1 className="text-blue-600 font-bold text-2xl">BrochureAI</h1>
+
                 {/* Desktop Menu */}
                 <ul className="hidden md:flex space-x-8 font-medium text-slate-700">
                     <li className="cursor-pointer hover:text-blue-600 transition-colors">Home</li>
@@ -17,7 +17,7 @@ const Navbar = () => {
                 </ul>
 
                 {/* Mobile Menu Toggle */}
-                <button 
+                <button
                     className="md:hidden p-2 text-slate-600 hover:text-slate-900 transition-colors"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle Menu"
