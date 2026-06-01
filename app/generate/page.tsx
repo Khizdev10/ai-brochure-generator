@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { scrapeFullWebsite, scrapeWebsite } from '../src/lib/scraper';
+import { structureData, createMarkdownBroucher } from '../src/lib/gemini'
 
 const styleOptions = [
     {
@@ -39,6 +40,8 @@ export default function GeneratePage() {
     const [step, setStep] = useState<number>(1);
     const [sourceLink, setSourceLink] = useState<string>("");
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+    const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("");
+    const [loadingStage, setLoadingStage] = useState<'idle' | 'scraping' | 'structuring' | 'generating'>('idle');
 
     return (
         <div className="min-h-screen bg-[#fafcff] font-sans">
@@ -55,7 +58,7 @@ export default function GeneratePage() {
                 </div>
             </header>
 
-            {step === 1 && (
+            {loadingStage === 'idle' && step === 1 && (
                 <main className="max-w-2xl mx-auto px-6 pt-8 pb-20">
                     {/* Progress */}
                     <div className="mb-12 flex flex-col items-center">
@@ -146,7 +149,7 @@ export default function GeneratePage() {
                 </main>
             )}
 
-            {step === 2 && (
+            {loadingStage === 'idle' && step === 2 && (
                 <main className="max-w-5xl mx-auto px-6 pt-8 pb-20">
                     {/* Progress */}
                     <div className="mb-12 flex flex-col items-center">
@@ -198,9 +201,24 @@ export default function GeneratePage() {
                     <div className="mt-12 flex flex-col items-center">
                         <button
                             onClick={async () => {
-                                let data = await scrapeFullWebsite(sourceLink);
-                                console.log(data);
-                                setStep(3)
+                                try {
+                                    setLoadingStage('scraping');
+                                    let data = await scrapeFullWebsite(sourceLink);
+                                    
+                                    setLoadingStage('structuring');
+                                    let structuredData = await structureData(data);
+                                    
+                                    setLoadingStage('generating');
+                                    let broucherMarkDown = await createMarkdownBroucher(structuredData, selectedStyle);
+                                    
+                                    setGeneratedMarkdown(broucherMarkDown || "");
+                                    setStep(3);
+                                } catch (err) {
+                                    console.error("Pipeline error:", err);
+                                    alert("Something went wrong during generation. Please try again.");
+                                } finally {
+                                    setLoadingStage('idle');
+                                }
                             }}
                             disabled={!selectedStyle}
                             className={`w-full max-w-xs flex justify-center items-center py-3.5 rounded-lg font-semibold transition-colors shadow-sm ${selectedStyle
@@ -217,7 +235,62 @@ export default function GeneratePage() {
                 </main>
             )}
 
-            {step === 3 && (
+            {/* Stage-by-stage Loading Screen */}
+            {loadingStage !== 'idle' && (
+                <main className="max-w-md mx-auto px-6 pt-16 pb-20 flex flex-col items-center justify-center min-h-[60vh]">
+                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-md w-full flex flex-col items-center">
+                        <div className="w-16 h-16 bg-indigo-50 text-[#5542f6] rounded-full flex items-center justify-center mb-6 animate-pulse">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#5542f6]"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 1 0 10 10"/></svg>
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-800 text-center mb-2">Generating Brochure</h2>
+                        <p className="text-sm text-slate-500 text-center mb-8">Please wait while we extract info and build your brochure.</p>
+                        
+                        <div className="w-full space-y-5">
+                            {/* Step 1: Scraping */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    {loadingStage === 'scraping' ? (
+                                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (loadingStage === 'structuring' || loadingStage === 'generating') ? (
+                                        <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200"></div>
+                                    )}
+                                </div>
+                                <span className={`text-sm font-semibold ${loadingStage === 'scraping' ? 'text-[#5542f6]' : (loadingStage === 'structuring' || loadingStage === 'generating') ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>Scraping Website Data...</span>
+                            </div>
+
+                            {/* Step 2: Structuring */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    {loadingStage === 'structuring' ? (
+                                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (loadingStage === 'generating') ? (
+                                        <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200"></div>
+                                    )}
+                                </div>
+                                <span className={`text-sm font-semibold ${loadingStage === 'structuring' ? 'text-[#5542f6]' : loadingStage === 'generating' ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>Structuring Information...</span>
+                            </div>
+
+                            {/* Step 3: Generating */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    {loadingStage === 'generating' ? (
+                                        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200"></div>
+                                    )}
+                                </div>
+                                <span className={`text-sm font-semibold ${loadingStage === 'generating' ? 'text-[#5542f6]' : 'text-slate-400'}`}>Generating Brochure...</span>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            )}
+
+            {loadingStage === 'idle' && step === 3 && (
                 <main className="max-w-6xl mx-auto px-6 pt-8 pb-20">
                     {/* Progress */}
                     <div className="mb-12 flex flex-col items-center">
@@ -263,17 +336,8 @@ export default function GeneratePage() {
                                         Copy Markdown
                                     </button>
                                 </div>
-                                <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 font-mono text-sm text-slate-600 flex-1 overflow-y-auto max-h-[300px]">
-                                    <span className="text-[#5542f6]">#</span> Company Overview<br /><br />
-                                    Welcome to our innovative platform. We provide cutting-edge solutions for modern businesses looking to scale efficiently.<br /><br />
-                                    <span className="text-[#5542f6]">##</span> Core Services<br /><br />
-                                    - <span className="font-semibold">AI Integration:</span> Seamlessly add intelligence to your workflow.<br />
-                                    - <span className="font-semibold">Data Analytics:</span> Understand your metrics instantly.<br />
-                                    - <span className="font-semibold">Cloud Sync:</span> Always connected, everywhere.<br /><br />
-                                    <span className="text-[#5542f6]">##</span> Contact Us<br /><br />
-                                    hello@yourcompany.com<br />
-                                    +1 (555) 123-4567<br />
-                                    {sourceLink || "www.yourcompany.com"}
+                                <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 font-mono text-sm text-slate-600 flex-1 overflow-y-auto max-h-[300px] whitespace-pre-wrap">
+                                    {generatedMarkdown}
                                 </div>
                             </div>
 
@@ -294,7 +358,7 @@ export default function GeneratePage() {
                                 </button>
 
                                 <button
-                                    onClick={() => { setStep(1); setSourceLink(""); setSelectedStyle(null); }}
+                                    onClick={() => { setStep(1); setSourceLink(""); setSelectedStyle(null); setGeneratedMarkdown(""); }}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group col-span-2"
                                 >
                                     <div className="flex items-center gap-2">
