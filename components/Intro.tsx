@@ -38,10 +38,7 @@ const Intro = () => {
                         Get Started Free
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                     </Link>
-                    <button className="w-full sm:w-auto flex justify-center items-center gap-2 bg-white hover:bg-gray-50 text-slate-800 border border-gray-300 px-8 py-3.5 rounded-lg font-medium transition-all shadow-sm">
-                        Watch Demo
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" /></svg>
-                    </button>
+
                 </div>
 
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { scrapeFullWebsite, scrapeWebsite } from '../src/lib/scraper';
 import { structureData, createMarkdownBroucher } from '../src/lib/gemini'
 
@@ -42,6 +42,180 @@ export default function GeneratePage() {
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
     const [generatedMarkdown, setGeneratedMarkdown] = useState<string>("");
     const [loadingStage, setLoadingStage] = useState<'idle' | 'scraping' | 'structuring' | 'generating'>('idle');
+    const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+    const [copiedText, setCopiedText] = useState<boolean>(false);
+    const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+    // Dynamic sharing link decoder
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash.startsWith('#content=')) {
+                try {
+                    const encodedData = hash.substring('#content='.length);
+                    const decodedData = decodeURIComponent(escape(atob(encodedData)));
+                    setGeneratedMarkdown(decodedData);
+                    setStep(3);
+                } catch (e) {
+                    console.error("Failed to decode brochure hash", e);
+                }
+            }
+        };
+
+        handleHashChange();
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    const handleCopyMarkdown = () => {
+        navigator.clipboard.writeText(generatedMarkdown);
+        setCopiedText(true);
+        setTimeout(() => setCopiedText(false), 2000);
+    };
+
+    const handleCopyLink = () => {
+        try {
+            const encoded = btoa(unescape(encodeURIComponent(generatedMarkdown)));
+            const shareUrl = `${window.location.origin}${window.location.pathname}#content=${encoded}`;
+            navigator.clipboard.writeText(shareUrl);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 2000);
+        } catch (e) {
+            console.error("Failed to copy link", e);
+        }
+    };
+
+    const parseMarkdownToHtml = (markdown: string) => {
+        return markdown
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*)\*/gim, '<em>$1</em>')
+            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/\n$/gim, '<br />')
+            .replace(/\n/gim, '<br />');
+    };
+
+    const handleDownloadPdf = () => {
+        const formattedHtml = parseMarkdownToHtml(generatedMarkdown);
+        const printIframe = document.createElement('iframe');
+        printIframe.style.position = 'fixed';
+        printIframe.style.right = '0';
+        printIframe.style.bottom = '0';
+        printIframe.style.width = '0';
+        printIframe.style.height = '0';
+        printIframe.style.border = '0';
+        document.body.appendChild(printIframe);
+
+        const doc = printIframe.contentWindow?.document;
+        if (!doc) return;
+
+        doc.write(`
+            <html>
+                <head>
+                    <title>AI Generated Brochure</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        body { 
+                            font-family: 'Inter', sans-serif; 
+                            padding: 40px; 
+                            color: #1e293b; 
+                            line-height: 1.6;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        h1 { 
+                            color: #5542f6; 
+                            font-size: 32px;
+                            border-bottom: 2px solid #eef2fc; 
+                            padding-bottom: 12px; 
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                            font-weight: 700;
+                        }
+                        h2 { 
+                            color: #0f172a; 
+                            font-size: 22px;
+                            margin-top: 32px; 
+                            margin-bottom: 16px;
+                            font-weight: 600;
+                            border-bottom: 1px solid #f1f5f9;
+                            padding-bottom: 6px;
+                        }
+                        h3 {
+                            color: #334155;
+                            font-size: 18px;
+                            margin-top: 24px;
+                            margin-bottom: 12px;
+                            font-weight: 600;
+                        }
+                        p {
+                            margin-bottom: 16px;
+                            font-size: 15px;
+                        }
+                        ul, ol { 
+                            padding-left: 20px; 
+                            margin-bottom: 20px;
+                        }
+                        li { 
+                            margin-bottom: 8px; 
+                            font-size: 15px;
+                        }
+                        strong {
+                            color: #0f172a;
+                            font-weight: 600;
+                        }
+                        blockquote { 
+                            border-left: 4px solid #5542f6; 
+                            padding-left: 16px; 
+                            margin: 20px 0; 
+                            color: #475569; 
+                            font-style: italic; 
+                            background: #f8fafc;
+                            padding-top: 8px;
+                            padding-bottom: 8px;
+                        }
+                        @media print {
+                            body { padding: 20px; }
+                            h1 { color: #5542f6 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${formattedHtml}
+                </body>
+            </html>
+        `);
+        doc.close();
+
+        setTimeout(() => {
+            printIframe.contentWindow?.focus();
+            printIframe.contentWindow?.print();
+            setTimeout(() => {
+                document.body.removeChild(printIframe);
+            }, 1000);
+        }, 500);
+    };
+
+    const handleRegenerate = async () => {
+        try {
+            setIsRegenerating(true);
+            let data = await scrapeFullWebsite(sourceLink);
+            let structuredData = await structureData(data);
+            let broucherMarkDown = await createMarkdownBroucher(structuredData, selectedStyle);
+            setGeneratedMarkdown(broucherMarkDown || "");
+        } catch (err) {
+            console.error("Regeneration error:", err);
+            alert("Something went wrong during regeneration. Please try again.");
+        } finally {
+            setIsRegenerating(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#fafcff] font-sans">
@@ -204,13 +378,13 @@ export default function GeneratePage() {
                                 try {
                                     setLoadingStage('scraping');
                                     let data = await scrapeFullWebsite(sourceLink);
-                                    
+
                                     setLoadingStage('structuring');
                                     let structuredData = await structureData(data);
-                                    
+
                                     setLoadingStage('generating');
                                     let broucherMarkDown = await createMarkdownBroucher(structuredData, selectedStyle);
-                                    
+
                                     setGeneratedMarkdown(broucherMarkDown || "");
                                     setStep(3);
                                 } catch (err) {
@@ -240,11 +414,11 @@ export default function GeneratePage() {
                 <main className="max-w-md mx-auto px-6 pt-16 pb-20 flex flex-col items-center justify-center min-h-[60vh]">
                     <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-md w-full flex flex-col items-center">
                         <div className="w-16 h-16 bg-indigo-50 text-[#5542f6] rounded-full flex items-center justify-center mb-6 animate-pulse">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#5542f6]"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 1 0 10 10"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#5542f6]"><circle cx="12" cy="12" r="10" /><path d="M12 2a7 7 0 1 0 10 10" /></svg>
                         </div>
                         <h2 className="text-xl font-bold text-slate-800 text-center mb-2">Generating Brochure</h2>
                         <p className="text-sm text-slate-500 text-center mb-8">Please wait while we extract info and build your brochure.</p>
-                        
+
                         <div className="w-full space-y-5">
                             {/* Step 1: Scraping */}
                             <div className="flex items-center gap-3">
@@ -314,12 +488,21 @@ export default function GeneratePage() {
                                 </div>
                                 {/* Mockup Placeholder */}
                                 <div className="w-full flex-1 min-h-[400px] bg-slate-100 rounded-lg border border-slate-200 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[#f8faff] to-[#eef2fc] opacity-50"></div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-200 mb-4 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <h3 className="font-semibold text-slate-700 relative z-10">Brochure_{selectedStyle || 'output'}.pdf</h3>
-                                    <p className="text-sm text-slate-500 mt-2 relative z-10 max-w-xs">A stunning, print-ready brochure automatically generated from {sourceLink || "your website"}.</p>
+                                    {isRegenerating ? (
+                                        <div className="flex flex-col items-center justify-center relative z-10">
+                                            <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                            <span className="text-sm font-semibold text-slate-600">Regenerating brochure preview...</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-[#f8faff] to-[#eef2fc] opacity-50"></div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-200 mb-4 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <h3 className="font-semibold text-slate-700 relative z-10">Brochure_{selectedStyle || 'output'}.pdf</h3>
+                                            <p className="text-sm text-slate-500 mt-2 relative z-10 max-w-xs">A stunning, print-ready brochure automatically generated from {sourceLink || "your website"}.</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -331,39 +514,56 @@ export default function GeneratePage() {
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex-1 flex flex-col">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="font-bold text-slate-800">Extracted Content</h2>
-                                    <button className="text-xs font-semibold text-[#5542f6] hover:underline flex items-center gap-1">
+                                    <button 
+                                        onClick={handleCopyMarkdown}
+                                        className="text-xs font-semibold text-[#5542f6] hover:underline flex items-center gap-1 cursor-pointer"
+                                    >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                        Copy Markdown
+                                        {copiedText ? "Copied!" : "Copy Markdown"}
                                     </button>
                                 </div>
-                                <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 font-mono text-sm text-slate-600 flex-1 overflow-y-auto max-h-[300px] whitespace-pre-wrap">
-                                    {generatedMarkdown}
+                                <div className={`bg-slate-50 border border-slate-100 rounded-lg p-5 font-mono text-sm text-slate-600 flex-1 overflow-y-auto max-h-[300px] whitespace-pre-wrap ${isRegenerating ? 'flex flex-col justify-center items-center' : ''}`}>
+                                    {isRegenerating ? (
+                                        <div className="text-center">
+                                            <div className="w-10 h-10 border-4 border-[#5542f6] border-t-transparent rounded-full animate-spin mb-3 mx-auto"></div>
+                                            <span className="text-sm font-semibold text-slate-500">Regenerating brochure content...</span>
+                                        </div>
+                                    ) : (
+                                        generatedMarkdown
+                                    )}
                                 </div>
                             </div>
 
                             {/* Actions Panel */}
                             <div className="grid grid-cols-2 gap-4">
-                                <button className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group">
+                                <button 
+                                    onClick={handleDownloadPdf}
+                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
+                                >
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">Download PDF</span>
                                 </button>
-
-                                <button className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group">
+ 
+                                <button 
+                                    onClick={handleCopyLink}
+                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
+                                >
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
                                     </div>
-                                    <span className="font-semibold text-slate-800 text-sm">Share Link</span>
+                                    <span className="font-semibold text-slate-800 text-sm">{copiedLink ? "Copied Link!" : "Share Link"}</span>
                                 </button>
-
+ 
                                 <button
-                                    onClick={() => { setStep(1); setSourceLink(""); setSelectedStyle(null); setGeneratedMarkdown(""); }}
-                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group col-span-2"
+                                    onClick={handleRegenerate}
+                                    disabled={isRegenerating}
+                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group col-span-2 cursor-pointer ${isRegenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#5542f6]"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
-                                        <span className="font-semibold text-slate-800">Generate Another</span>
+                                        <span className="font-semibold text-slate-800">{isRegenerating ? "Regenerating..." : "Generate Another"}</span>
                                     </div>
                                 </button>
                             </div>
