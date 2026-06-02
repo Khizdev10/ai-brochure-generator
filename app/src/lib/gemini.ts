@@ -33,7 +33,7 @@ ${data}
 
 Style to apply: ${style}
 
-Use the style provided and create a beautiful, highly engaging markdown brochure. Use emojis where appropriate to make it look attractive. Use great markdown formatting like bolding, lists, blockquotes, etc.`;
+Use the style provided and create a professional, well-structured markdown brochure. Do NOT use emojis anywhere. Use formal, polished business language throughout. Structure it clearly with markdown headings (# for the company title, ## for section headings), bullet points for services and features, and concise paragraphs for descriptions. Include the following sections: About Us, Our Services, Why Choose Us, and Contact Information.`;
 
     try {
         const response = await ai.models.generateContent({

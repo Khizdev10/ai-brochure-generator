@@ -138,7 +138,14 @@ export default function GeneratePage() {
 
     const extractBrochureData = (markdown: string) => {
         const clean = (text: string) =>
-            text.replace(/[*#_`\[\]()~]/g, '').replace(/\s+/g, ' ').trim();
+            // Strip markdown syntax, emojis, and normalize whitespace
+            text
+                .replace(/[*#_`\[\]()~]/g, '')
+                .replace(/[\u{1F300}-\u{1FFFF}]/gu, '') // emoji ranges
+                .replace(/[\u2600-\u27BF]/gu, '')        // misc symbols
+                .replace(/[\u{1F000}-\u{1F02F}]/gu, '') // mahjong tiles etc
+                .replace(/\s+/g, ' ')
+                .trim();
 
         // --- Title ---
         const titleMatch = markdown.match(/^# (.*?)$/m) || markdown.match(/Title:\s*(.*?)$/im);
