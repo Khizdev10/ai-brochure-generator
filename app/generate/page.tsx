@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { scrapeFullWebsite, scrapeWebsite } from '../src/lib/scraper';
 import { structureData, createMarkdownBroucher } from '../src/lib/gemini'
 
+
+
 const styleOptions = [
     {
         id: 'business',
@@ -67,6 +69,8 @@ export default function GeneratePage() {
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
+
+
     const handleCopyMarkdown = () => {
         navigator.clipboard.writeText(generatedMarkdown);
         setCopiedText(true);
@@ -85,6 +89,37 @@ export default function GeneratePage() {
         }
     };
 
+    const loadPdfLibraries = (): Promise<{ jsPDF: any; html2canvas: any }> => {
+        return new Promise((resolve, reject) => {
+            if (typeof window === 'undefined') return reject();
+            
+            // Check if already loaded
+            if (window.html2canvas && (window.jspdf || (window.jspdf && window.jspdf.jsPDF))) {
+                const jsPDFLib = window.jspdf.jsPDF || window.jspdf;
+                resolve({ jsPDF: jsPDFLib, html2canvas: window.html2canvas });
+                return;
+            }
+
+            const loadScript = (src: string): Promise<void> => {
+                return new Promise((res, rej) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = () => res();
+                    script.onerror = (err) => rej(err);
+                    document.body.appendChild(script);
+                });
+            };
+
+            Promise.all([
+                loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+                loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+            ]).then(() => {
+                const jsPDFLib = window.jspdf?.jsPDF || window.jspdf;
+                resolve({ jsPDF: jsPDFLib, html2canvas: window.html2canvas });
+            }).catch(reject);
+        });
+    };
+
     const parseMarkdownToHtml = (markdown: string) => {
         return markdown
             .replace(/&/g, "&amp;")
@@ -99,6 +134,81 @@ export default function GeneratePage() {
             .replace(/^\- (.*$)/gim, '<li>$1</li>')
             .replace(/\n$/gim, '<br />')
             .replace(/\n/gim, '<br />');
+    };
+
+    const extractBrochureData = (markdown: string) => {
+        const clean = (text: string) =>
+            text.replace(/[*#_`\[\]()~]/g, '').replace(/\s+/g, ' ').trim();
+
+        // --- Title ---
+        const titleMatch = markdown.match(/^# (.*?)$/m) || markdown.match(/Title:\s*(.*?)$/im);
+        const title = titleMatch ? clean(titleMatch[1]) : "Our Company";
+
+        // --- All H2 headings ---
+        const h2Matches = [...markdown.matchAll(/^## (.*?)$/gm)];
+        const tagline = h2Matches.length > 0 ? clean(h2Matches[0][1]) : "Innovative Solutions for Tomorrow";
+        const subtitle = h2Matches.length > 1 ? clean(h2Matches[1][1]) : "Excellence in Every Project";
+
+        // --- Extract sections: each H2/H3 heading + its following content ---
+        const sections: { heading: string; body: string }[] = [];
+        const allHeadings = [...markdown.matchAll(/^#{2,3} (.+)$/gm)];
+        for (let i = 0; i < allHeadings.length; i++) {
+            const heading = clean(allHeadings[i][1]);
+            const start = (allHeadings[i].index ?? 0) + allHeadings[i][0].length;
+            const end = allHeadings[i + 1]?.index ?? markdown.length;
+            const block = markdown.slice(start, end);
+            const bodyLines = block
+                .split('\n')
+                .map(l => l.trim())
+                .filter(l => l.length > 10 && !l.startsWith('#') && !l.startsWith('---'))
+                .slice(0, 4)
+                .map(l => clean(l.replace(/^[\-\*\+]\s*/, '')));
+            if (bodyLines.length > 0) {
+                sections.push({ heading, body: bodyLines.join(' ').slice(0, 250) });
+            }
+        }
+
+        // --- Bullet points (services/features) ---
+        const bulletPoints = markdown.match(/^[\-\*\+]\s+(.+)$/gm) || [];
+        const services = bulletPoints
+            .map(bp => clean(bp.replace(/^[\-\*\+]\s+/, '')))
+            .filter(s => s.length > 3 && s.length < 120)
+            .slice(0, 8);
+        const finalServices = services.length > 0 ? services : ["Quality Services", "Innovative Products", "Expert Consultation", "Client Support"];
+
+        // --- Plain paragraphs ---
+        const paragraphs = markdown.split('\n')
+            .map(p => p.trim())
+            .filter(p =>
+                p.length > 30 &&
+                !p.startsWith('#') &&
+                !p.startsWith('-') &&
+                !p.startsWith('*') &&
+                !p.startsWith('>') &&
+                !p.match(/^\d+\./)
+            )
+            .map(p => clean(p));
+
+        const intro = paragraphs[0] || "We deliver world-class solutions to help your business scale efficiently.";
+        const secondaryText = paragraphs[1] || "Partner with us to unlock your business's true potential and achieve sustainable growth.";
+        const thirdParagraph = paragraphs[2] || "";
+
+        // --- Why Choose Us ---
+        const whySection = markdown.match(/why choose us[\s\S]*?(?=\n##|\n#|$)/i);
+        const whyBullets = whySection
+            ? (whySection[0].match(/^[\-\*\+]\s+(.+)$/gm) || []).map(b => clean(b.replace(/^[\-\*\+]\s+/, ''))).filter(b => b.length > 3)
+            : [];
+        const whyChooseUs = whyBullets.length > 0
+            ? whyBullets.slice(0, 4)
+            : finalServices.slice(0, 4).map(s => s.split(':')[0]);
+
+        // --- Contact ---
+        const emailMatch = markdown.match(/[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+/);
+        const email = emailMatch ? emailMatch[0] : "hello@company.com";
+        const phoneMatch = markdown.match(/(\+?\d[\d\-\s()]{7,}\d)/);
+        const phone = phoneMatch ? phoneMatch[0] : "+1 (555) 019-2834";
+
+        return { title, tagline, subtitle, services: finalServices, intro, secondaryText, thirdParagraph, whyChooseUs, sections, email, phone };
     };
 
     const handleDownloadPdf = () => {
@@ -200,6 +310,50 @@ export default function GeneratePage() {
                 document.body.removeChild(printIframe);
             }, 1000);
         }, 500);
+    };
+
+    const handleDownloadImage = async () => {
+        try {
+            // Dynamically import html2canvas-pro — no CDN, no window globals needed
+            const html2canvasModule = await import('html2canvas-pro');
+            const html2canvas = html2canvasModule.default;
+
+            const element = document.getElementById('brochure-print-container');
+            if (!element) {
+                alert('Brochure preview not found.');
+                return;
+            }
+
+            // Temporarily clear the CSS scale transform so it captures at full 842x595
+            const originalTransform = element.style.transform;
+            element.style.transform = 'none';
+
+            await new Promise(r => setTimeout(r, 100));
+
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                width: 842,
+                height: 595,
+            });
+
+            // Restore transform
+            element.style.transform = originalTransform;
+
+            const imgData = canvas.toDataURL('image/png');
+            const downloadLink = document.createElement('a');
+            downloadLink.href = imgData;
+            downloadLink.download = `brochure_${selectedStyle || 'output'}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        } catch (error: any) {
+            console.error('Failed to download image:', error);
+            alert('Failed to download brochure image: ' + (error?.message || String(error)));
+        }
     };
 
     const handleRegenerate = async () => {
@@ -486,22 +640,130 @@ export default function GeneratePage() {
                                     <h2 className="font-bold text-slate-800">Visual Preview</h2>
                                     <span className="text-xs font-medium bg-green-100 text-green-700 px-3 py-1 rounded-full">Ready</span>
                                 </div>
-                                {/* Mockup Placeholder */}
-                                <div className="w-full flex-1 min-h-[400px] bg-slate-100 rounded-lg border border-slate-200 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                                {/* Live Brochure Preview */}
+                                <div className="w-full flex-1 min-h-[440px] bg-slate-50 rounded-lg border border-slate-200 p-2 flex items-center justify-center relative overflow-hidden">
                                     {isRegenerating ? (
                                         <div className="flex flex-col items-center justify-center relative z-10">
                                             <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
                                             <span className="text-sm font-semibold text-slate-600">Regenerating brochure preview...</span>
                                         </div>
                                     ) : (
-                                        <>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-[#f8faff] to-[#eef2fc] opacity-50"></div>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-200 mb-4 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            <h3 className="font-semibold text-slate-700 relative z-10">Brochure_{selectedStyle || 'output'}.pdf</h3>
-                                            <p className="text-sm text-slate-500 mt-2 relative z-10 max-w-xs">A stunning, print-ready brochure automatically generated from {sourceLink || "your website"}.</p>
-                                        </>
+                                        (() => {
+                                            const brochureData = extractBrochureData(generatedMarkdown);
+                                            const primaryColor = selectedStyle === 'creative' ? '#d946ef' : selectedStyle === 'enterprise' ? '#0f766e' : '#5542f6';
+                                            return (
+                                                <div 
+                                                    id="brochure-print-container"
+                                                    className="bg-white overflow-hidden text-left relative"
+                                                    style={{
+                                                        width: '842px',
+                                                        height: '595px',
+                                                        transform: 'scale(0.55)',
+                                                        minWidth: '842px',
+                                                        minHeight: '595px',
+                                                        transformOrigin: 'top left',
+                                                        display: 'flex',
+                                                        fontFamily: 'system-ui, sans-serif',
+                                                    }}
+                                                >
+                                                    {/* Left Panel: Contact + Why Us */}
+                                                    <div style={{ width: '260px', minWidth: '260px', background: primaryColor, padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: 'white', position: 'relative', overflow: 'hidden' }}>
+                                                        <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                                                        <div style={{ position: 'absolute', bottom: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                                                        <div style={{ position: 'relative', zIndex: 1 }}>
+                                                            {/* Logo mark */}
+                                                            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            </div>
+                                                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Why Choose Us</div>
+                                                            <div style={{ width: 24, height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 1, marginBottom: 12 }} />
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                                {brochureData.whyChooseUs.map((item: string, i: number) => (
+                                                                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                                                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.7)', marginTop: 4, flexShrink: 0 }} />
+                                                                        <span style={{ fontSize: 9.5, lineHeight: 1.5, opacity: 0.9 }}>{item}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ position: 'relative', zIndex: 1 }}>
+                                                            <div style={{ height: 1, background: 'rgba(255,255,255,0.2)', marginBottom: 14 }} />
+                                                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.6, marginBottom: 10 }}>Get In Touch</div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                                    <span style={{ opacity: 0.85 }}>{brochureData.email}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                                    <span style={{ opacity: 0.85 }}>{brochureData.phone}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                                                    <span style={{ opacity: 0.85 }}>{sourceLink || "www.company.com"}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ marginTop: 14, fontSize: 7.5, opacity: 0.5 }}>© {new Date().getFullYear()} {brochureData.title}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Middle Panel: Mission + Body Text + Sections */}
+                                                    <div style={{ flex: 1, padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: primaryColor, marginBottom: 6 }}>About Us</div>
+                                                            <p style={{ fontSize: 10, lineHeight: 1.65, color: '#334155', margin: 0 }}>{brochureData.intro}</p>
+                                                        </div>
+                                                        {brochureData.secondaryText && (
+                                                            <p style={{ fontSize: 9.5, lineHeight: 1.65, color: '#475569', margin: 0 }}>{brochureData.secondaryText}</p>
+                                                        )}
+                                                        {brochureData.sections.length > 0 && (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                                                                {brochureData.sections.slice(0, 2).map((section: { heading: string; body: string }, i: number) => (
+                                                                    <div key={i} style={{ borderLeft: `3px solid ${primaryColor}`, paddingLeft: 10 }}>
+                                                                        <div style={{ fontSize: 8.5, fontWeight: 700, color: '#1e293b', marginBottom: 3 }}>{section.heading}</div>
+                                                                        <p style={{ fontSize: 9, lineHeight: 1.55, color: '#64748b', margin: 0 }}>{section.body.slice(0, 160)}</p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {brochureData.thirdParagraph && (
+                                                            <p style={{ fontSize: 9, lineHeight: 1.6, color: '#64748b', margin: 0, fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+                                                                "{brochureData.thirdParagraph.slice(0, 180)}"
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Right Panel: Cover + Services */}
+                                                    <div style={{ width: '260px', minWidth: '260px', padding: '32px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#f8fafc' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 4 }}>Company Overview</div>
+                                                            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0', lineHeight: 1.2 }}>{brochureData.title}</h2>
+                                                            <div style={{ width: 28, height: 3, background: primaryColor, borderRadius: 2, marginBottom: 10 }} />
+                                                            <p style={{ fontSize: 10, color: '#475569', fontWeight: 600, lineHeight: 1.5, margin: '0 0 20px 0' }}>{brochureData.tagline}</p>
+
+                                                            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>Our Services</div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                                {brochureData.services.slice(0, 6).map((service: string, i: number) => (
+                                                                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                                                                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: `${primaryColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                                                                            <div style={{ width: 4, height: 4, borderRadius: '50%', background: primaryColor }} />
+                                                                        </div>
+                                                                        <span style={{ fontSize: 9.5, color: '#334155', lineHeight: 1.5 }}>{service.slice(0, 55)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 16 }}>
+                                                            <div style={{ width: 18, height: 18, borderRadius: '50%', background: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                            </div>
+                                                            <span style={{ fontSize: 8.5, fontWeight: 700, color: '#64748b' }}>Created with</span>
+                                                            <span style={{ fontSize: 8.5, fontWeight: 900, color: primaryColor }}>BrochureAI</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()
                                     )}
                                 </div>
                             </div>
@@ -545,6 +807,16 @@ export default function GeneratePage() {
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">Download PDF</span>
                                 </button>
+
+                                <button 
+                                    onClick={handleDownloadImage}
+                                    className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                    </div>
+                                    <span className="font-semibold text-slate-800 text-sm">Download Image</span>
+                                </button>
  
                                 <button 
                                     onClick={handleCopyLink}
@@ -559,12 +831,12 @@ export default function GeneratePage() {
                                 <button
                                     onClick={handleRegenerate}
                                     disabled={isRegenerating}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group col-span-2 cursor-pointer ${isRegenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer ${isRegenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#5542f6]"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
-                                        <span className="font-semibold text-slate-800">{isRegenerating ? "Regenerating..." : "Generate Another"}</span>
+                                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={isRegenerating ? "animate-spin" : ""}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
                                     </div>
+                                    <span className="font-semibold text-slate-800 text-sm">{isRegenerating ? "Regenerating..." : "Generate Another"}</span>
                                 </button>
                             </div>
                         </div>
