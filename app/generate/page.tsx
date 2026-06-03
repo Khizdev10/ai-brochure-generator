@@ -92,7 +92,7 @@ export default function GeneratePage() {
     const loadPdfLibraries = (): Promise<{ jsPDF: any; html2canvas: any }> => {
         return new Promise((resolve, reject) => {
             if (typeof window === 'undefined') return reject();
-            
+
             // Check if already loaded
             if (window.html2canvas && (window.jspdf || (window.jspdf && window.jspdf.jsPDF))) {
                 const jsPDFLib = window.jspdf.jsPDF || window.jspdf;
@@ -228,7 +228,6 @@ export default function GeneratePage() {
         printIframe.style.height = '0';
         printIframe.style.border = '0';
         document.body.appendChild(printIframe);
-
         const doc = printIframe.contentWindow?.document;
         if (!doc) return;
 
@@ -377,7 +376,6 @@ export default function GeneratePage() {
             setIsRegenerating(false);
         }
     };
-
     return (
         <div className="min-h-screen bg-[#fafcff] font-sans">
             {/* Header */}
@@ -392,10 +390,9 @@ export default function GeneratePage() {
                     <Link href="#" className="hover:text-slate-900 transition-colors">Templates</Link>
                 </div>
             </header>
-
             {loadingStage === 'idle' && step === 1 && (
                 <main className="max-w-2xl mx-auto px-6 pt-8 pb-20">
-                    {/* Progress */}
+
                     <div className="mb-12 flex flex-col items-center">
                         <span className="text-[13px] font-semibold text-[#5542f6] mb-4">Step 1: Source Selection</span>
                         <div className="flex items-center">
@@ -657,7 +654,7 @@ export default function GeneratePage() {
                                             const brochureData = extractBrochureData(generatedMarkdown);
                                             const primaryColor = selectedStyle === 'creative' ? '#d946ef' : selectedStyle === 'enterprise' ? '#0f766e' : '#5542f6';
                                             return (
-                                                <div 
+                                                <div
                                                     id="brochure-print-container"
                                                     className="bg-white overflow-hidden text-left relative"
                                                     style={{
@@ -678,7 +675,7 @@ export default function GeneratePage() {
                                                         <div style={{ position: 'relative', zIndex: 1 }}>
                                                             {/* Logo mark */}
                                                             <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                                                             </div>
                                                             <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Why Choose Us</div>
                                                             <div style={{ width: 24, height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 1, marginBottom: 12 }} />
@@ -696,15 +693,15 @@ export default function GeneratePage() {
                                                             <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.6, marginBottom: 10 }}>Get In Touch</div>
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
                                                                     <span style={{ opacity: 0.85 }}>{brochureData.email}</span>
                                                                 </div>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
                                                                     <span style={{ opacity: 0.85 }}>{brochureData.phone}</span>
                                                                 </div>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 9 }}>
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
                                                                     <span style={{ opacity: 0.85 }}>{sourceLink || "www.company.com"}</span>
                                                                 </div>
                                                             </div>
@@ -760,7 +757,7 @@ export default function GeneratePage() {
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 16 }}>
                                                             <div style={{ width: 18, height: 18, borderRadius: '50%', background: primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
                                                             </div>
                                                             <span style={{ fontSize: 8.5, fontWeight: 700, color: '#64748b' }}>Created with</span>
                                                             <span style={{ fontSize: 8.5, fontWeight: 900, color: primaryColor }}>BrochureAI</span>
@@ -781,7 +778,7 @@ export default function GeneratePage() {
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex-1 flex flex-col">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="font-bold text-slate-800">Extracted Content</h2>
-                                    <button 
+                                    <button
                                         onClick={handleCopyMarkdown}
                                         className="text-xs font-semibold text-[#5542f6] hover:underline flex items-center gap-1 cursor-pointer"
                                     >
@@ -803,7 +800,7 @@ export default function GeneratePage() {
 
                             {/* Actions Panel */}
                             <div className="grid grid-cols-2 gap-4">
-                                <button 
+                                <button
                                     onClick={handleDownloadPdf}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
                                 >
@@ -813,17 +810,17 @@ export default function GeneratePage() {
                                     <span className="font-semibold text-slate-800 text-sm">Download PDF</span>
                                 </button>
 
-                                <button 
+                                <button
                                     onClick={handleDownloadImage}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
                                 >
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-[#5542f6] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">Download Image</span>
                                 </button>
- 
-                                <button 
+
+                                <button
                                     onClick={handleCopyLink}
                                     className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 bg-white hover:border-[#5542f6] hover:bg-indigo-50 transition-all group cursor-pointer"
                                 >
@@ -832,7 +829,7 @@ export default function GeneratePage() {
                                     </div>
                                     <span className="font-semibold text-slate-800 text-sm">{copiedLink ? "Copied Link!" : "Share Link"}</span>
                                 </button>
- 
+
                                 <button
                                     onClick={handleRegenerate}
                                     disabled={isRegenerating}
