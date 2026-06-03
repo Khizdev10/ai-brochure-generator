@@ -434,7 +434,6 @@ export default function GeneratePage() {
                                 />
                             </div>
                         </div>
-
                         {/* Info Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="flex gap-3 bg-[#f8faff] border border-[#eef2fc] rounded-xl p-4 shadow-sm">
@@ -448,7 +447,6 @@ export default function GeneratePage() {
                                     </p>
                                 </div>
                             </div>
-
                             <div className="flex gap-3 bg-[#f8faff] border border-[#eef2fc] rounded-xl p-4 shadow-sm">
                                 <div className="text-[#5542f6] shrink-0 mt-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3 8 3v8Z" /></svg>
