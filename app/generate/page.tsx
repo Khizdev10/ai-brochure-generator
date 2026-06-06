@@ -195,11 +195,9 @@ export default function GeneratePage() {
                 !p.match(/^\d+\./)
             )
             .map(p => clean(p));
-
         const intro = paragraphs[0] || "We deliver world-class solutions to help your business scale efficiently.";
         const secondaryText = paragraphs[1] || "Partner with us to unlock your business's true potential and achieve sustainable growth.";
         const thirdParagraph = paragraphs[2] || "";
-
         // --- Why Choose Us ---
         const whySection = markdown.match(/why choose us[\s\S]*?(?=\n##|\n#|$)/i);
         const whyBullets = whySection
