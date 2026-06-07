@@ -413,8 +413,8 @@ function GeneratePageInner() {
                 </Link>
                 <div className="hidden md:flex gap-6 text-sm font-medium text-slate-500">
                     <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
-                    <Link href="#" className="hover:text-slate-900 transition-colors">Drafts</Link>
-                    <Link href="#" className="hover:text-slate-900 transition-colors">Templates</Link>
+                    <Link href="/templates" className="hover:text-slate-900 transition-colors">Templates</Link>
+                    <Link href="/contact" className="hover:text-slate-900 transition-colors">Contact</Link>
                 </div>
             </header>
             {loadingStage === 'idle' && step === 1 && (
