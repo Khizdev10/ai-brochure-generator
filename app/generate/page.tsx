@@ -118,36 +118,6 @@ function GeneratePageInner() {
         }
     };
 
-    const loadPdfLibraries = (): Promise<{ jsPDF: any; html2canvas: any }> => {
-        return new Promise((resolve, reject) => {
-            if (typeof window === 'undefined') return reject();
-
-            // Check if already loaded
-            if (window.html2canvas && (window.jspdf || (window.jspdf && window.jspdf.jsPDF))) {
-                const jsPDFLib = window.jspdf.jsPDF || window.jspdf;
-                resolve({ jsPDF: jsPDFLib, html2canvas: window.html2canvas });
-                return;
-            }
-
-            const loadScript = (src: string): Promise<void> => {
-                return new Promise((res, rej) => {
-                    const script = document.createElement('script');
-                    script.src = src;
-                    script.onload = () => res();
-                    script.onerror = (err) => rej(err);
-                    document.body.appendChild(script);
-                });
-            };
-
-            Promise.all([
-                loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-                loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-            ]).then(() => {
-                const jsPDFLib = window.jspdf?.jsPDF || window.jspdf;
-                resolve({ jsPDF: jsPDFLib, html2canvas: window.html2canvas });
-            }).catch(reject);
-        });
-    };
 
     const parseMarkdownToHtml = (markdown: string) => {
         return markdown
