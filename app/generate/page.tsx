@@ -1,7 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { scrapeFullWebsite, scrapeWebsite } from '../src/lib/scraper';
 import { structureData, createMarkdownBroucher } from '../src/lib/gemini'
 
@@ -35,10 +36,24 @@ const styleOptions = [
         subtitle: 'Sleek & Simple',
         icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
         imgClass: "bg-[url('https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
+    },
+    {
+        id: 'tech',
+        title: 'Tech Startup',
+        subtitle: 'Digital & Modern',
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>,
+        imgClass: "bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
+    },
+    {
+        id: 'nonprofit',
+        title: 'Non-Profit',
+        subtitle: 'Warm & Impactful',
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>,
+        imgClass: "bg-[url('https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center grayscale"
     }
 ];
 
-export default function GeneratePage() {
+function GeneratePageInner() {
     const [step, setStep] = useState<number>(1);
     const [sourceLink, setSourceLink] = useState<string>("");
     const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
@@ -47,6 +62,20 @@ export default function GeneratePage() {
     const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
     const [copiedText, setCopiedText] = useState<boolean>(false);
     const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+    const searchParams = useSearchParams();
+
+    // Pre-select template from URL query param and jump to step 2
+    useEffect(() => {
+        const templateParam = searchParams.get('template');
+        if (templateParam) {
+            const validIds = styleOptions.map(s => s.id);
+            if (validIds.includes(templateParam)) {
+                setSelectedStyle(templateParam);
+                setStep(2);
+            }
+        }
+    }, [searchParams]);
 
     // Dynamic sharing link decoder
     useEffect(() => {
@@ -844,5 +873,13 @@ export default function GeneratePage() {
                 </main>
             )}
         </div>
+    );
+}
+
+export default function GeneratePage() {
+    return (
+        <Suspense fallback={null}>
+            <GeneratePageInner />
+        </Suspense>
     );
 }

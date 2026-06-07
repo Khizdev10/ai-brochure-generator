@@ -1,19 +1,37 @@
 "use client"
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+
+    const links = [
+        { label: "Home", href: "/" },
+        { label: "Templates", href: "/templates" },
+        { label: "Contact", href: "/contact" },
+    ];
 
     return (
         <div className="bg-sky-50 py-4 px-8 md:px-16 border-b border-gray-200 relative z-50">
             <div className="flex justify-between items-center">
-                <h1 className="text-blue-600 font-bold text-2xl">BrochureAI</h1>
+                <Link href="/" className="text-blue-600 font-bold text-2xl hover:opacity-80 transition-opacity">
+                    BrochureAI
+                </Link>
 
                 {/* Desktop Menu */}
                 <ul className="hidden md:flex space-x-8 font-medium text-slate-700">
-                    <li className="cursor-pointer hover:text-blue-600 transition-colors">Home</li>
-                    <li className="cursor-pointer hover:text-blue-600 transition-colors">Templates</li>
-                    <li className="cursor-pointer hover:text-blue-600 transition-colors">Contact</li>
+                    {links.map((link) => (
+                        <li key={link.href}>
+                            <Link
+                                href={link.href}
+                                className={`hover:text-blue-600 transition-colors ${pathname === link.href ? "text-blue-600 font-semibold" : ""}`}
+                            >
+                                {link.label}
+                            </Link>
+                        </li>
+                    ))}
                 </ul>
 
                 {/* Mobile Menu Toggle */}
@@ -36,9 +54,17 @@ const Navbar = () => {
             {isOpen && (
                 <div className="md:hidden absolute top-full left-0 w-full bg-sky-50 border-b border-gray-200 shadow-lg">
                     <ul className="flex flex-col px-8 py-4 space-y-4 font-medium text-slate-700">
-                        <li className="cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setIsOpen(false)}>Home</li>
-                        <li className="cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setIsOpen(false)}>Templates</li>
-                        <li className="cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setIsOpen(false)}>Contact</li>
+                        {links.map((link) => (
+                            <li key={link.href}>
+                                <Link
+                                    href={link.href}
+                                    className={`hover:text-blue-600 transition-colors ${pathname === link.href ? "text-blue-600 font-semibold" : ""}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    {link.label}
+                                </Link>
+                            </li>
+                        ))}
                     </ul>
                 </div>
             )}
